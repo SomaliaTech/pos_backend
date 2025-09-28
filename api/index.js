@@ -17,10 +17,9 @@ import routerTable from "../routers/table.js";
 
 const app = express();
 
-// Connect to DB once at cold start
-connectDB();
+// Connect to DB once (cold start)
+await connectDB(); // If connectDB returns a Promise
 
-// Middlewares
 app.use(
   cors({
     credentials: true,
@@ -30,7 +29,6 @@ app.use(
 app.use(express.json({ limit: "50mb" }));
 app.use(cookieParser());
 
-// Routes
 app.get("/test", (req, res) => {
   res.json({ message: "Hello from POS Server!" });
 });
@@ -41,5 +39,8 @@ app.use("/api/reports", routerReport);
 app.use("/api/orders", routerOrder);
 app.use("/api/table", routerTable);
 
-// Export for Vercel
-export const handler = serverless(app);
+// ❌ DO NOT call app.listen()
+// ✅ INSTEAD: export a handler function
+app.listen(6001, () => {
+  console.log("server is running");
+});
