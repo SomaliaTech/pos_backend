@@ -1,51 +1,45 @@
+// api/index.js
+
+import dotenv from "dotenv";
+dotenv.config();
+
 import express from "express";
+import serverless from "serverless-http";
 import connectDB from "../config/databse.js";
-import config from "../config/config.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+
 import routerUser from "../routers/user.js";
 import routerMenu from "../routers/menu.js";
 import routerReport from "../routers/reports.js";
 import routerOrder from "../routers/order.js";
 import routerTable from "../routers/table.js";
+
 const app = express();
 
-const PORT = config.port;
+// Connect to DB once at cold start
+connectDB();
 
 // Middlewares
 app.use(
   cors({
     credentials: true,
-    origin: [
-      "http://localhost:5173",
-      "http://localhost:3000",
-      // "https://pos-test-frontend-eight.vercel.app/",
-    ],
+    origin: [process.env.PUBLIC_CLIENT, "http://localhost:3000"],
   })
 );
-app.use(express.json({ limit: "50mb" })); // parse incoming request in json format
+app.use(express.json({ limit: "50mb" }));
 app.use(cookieParser());
 
-// Root Endpoint
+// Routes
 app.get("/test", (req, res) => {
   res.json({ message: "Hello from POS Server!" });
 });
 
-// Other Endpoints
 app.use("/api/user", routerUser);
-// app.use("/api/order", "./routes/orderRoute");
 app.use("/api/menus", routerMenu);
 app.use("/api/reports", routerReport);
 app.use("/api/orders", routerOrder);
 app.use("/api/table", routerTable);
-// app.use("/api/payment", "./routes/paymentRoute");
 
-// Global Error Handler
-// app.use(globalErrorHandler);
-
-// Server
-app.listen(PORT, () => {
-  connectDB();
-
-  console.log(`☑️  POS Server is listening on port ${PORT}`);
-});
+// Export for Vercel
+export const handler = serverless(app);
